@@ -1,3 +1,3 @@
 # code_Joint_model_SMART
 
-# Author: Yan-Cheng Chao
+# Author: Yan-Cheng Chao, Qui Tran
