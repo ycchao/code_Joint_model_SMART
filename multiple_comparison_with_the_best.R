@@ -8,9 +8,6 @@ library(tidyverse)
 library(survival)
 library(DTR)
 library(MASS)
-library(parallel)
-RNGkind("L'Ecuyer-CMRG")
-setwd("/home/ycchao/jobs/Qui")
 
 source('helper.R') # Misc. helper functions
 source('simSMART.R') # simulate SMART with survival outcomes
@@ -18,19 +15,14 @@ source('calH.R') # Estimate 2 non-parametric baseline hazards for response and d
 source('loglik.R') # Estimate log-likelihood
 
 ########################################################## Set parameters ####
-task_id <- Sys.getenv("SLURM_ARRAY_TASK_ID") %>% as.numeric()
-
-args <- commandArgs(trailingOnly = T)
-
-seed <- as.numeric(args[1])
-n <- as.numeric(args[2])   # sample size
-Tcheck <- as.numeric(args[3])
-adt <- eval(parse(text=args[4]))
-delta <- as.numeric(args[5])
-n_iter <- as.numeric(args[6])
-bootstrapN <- as.numeric(args[7])
-tseq <- eval(parse(text=args[8])) # time at which we want to compare S(t) between regimens
-# delta=1.3 #results in paper show delta ranging between 0 and 2
+seed <- 1234
+n <- 500   # sample size
+Tcheck <- 5
+adt <- c(3,20)
+delta <- 0
+n_iter <- 5 # set to 1000 in manuscript
+bootstrapN <- 5 # set to 1000 in manuscript
+tseq <- seq(1,6,1) # time at which we want to compare S(t) between regimens
 
 tolerance=1e-5; maxit=50; pi.x <- 0.5; pi.z1.R <- .4;
 pi.z1.NR <- .6; pi.z2.R=.6; pi.z2.NR <- .7; Tcheck=5; adt=c(3,20); 
@@ -42,17 +34,9 @@ TimeRDu = round(seq(0, adt[2], by=10^(-decimal)),decimal)
 tbetas=c(delta, -delta, -delta/4, -delta/2) 
 
 set.seed(seed)
-s <- .Random.seed
-i <- 1
-while(i < task_id){
-  s <- nextRNGStream(s)
-  i <- i + 1
-}
-.Random.seed <- s
 
 result_table <- matrix(NA,nrow=length(tseq)*n_iter,ncol=5)
-mean_table <- matrix(NA,nrow=length(tseq)*n_iter,ncol=5)
-# V_all <- matrix(NA,nrow=4*n_iter,ncol=4*length(tseq))
+
 for(iter in 1:n_iter){
   
   savefit = list(NULL)
@@ -213,8 +197,6 @@ for(iter in 1:n_iter){
       }
     }
     result_table[length(tseq) * (iter - 1) + t,] <- c(tseq[t],S.pos)
-    mean_table[length(tseq) * (iter - 1) + t,] <- savemean[seqt[t],]
-    # V_all[ ((iter - 1) * 4 + 1):(iter * 4), ((t - 1) * 4 + 1):(t * 4) ] <- V
     if(t==1) cat(' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~','\n')
     cat(' At t = ',tseq[t],', best regimen(s) are', c('A1B1','A1B2','A2B1','A2B2')[S.pos==1],'\n')
     if(t==length(tseq)) cat(' ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~','\n')
@@ -222,53 +204,11 @@ for(iter in 1:n_iter){
   
 }
 
-save_path <- Sys.getenv("RESULT")
-"%+%" <- function(x,y) paste(x,y,sep="")
-output_file_tag <- args[9]
-output_file_name <- output_file_tag %+% sprintf("_%d_%d",n,task_id) %+% ".txt"
-output_mean_name <- output_file_tag %+% sprintf("_mean_%d_%d",n,task_id) %+% ".txt"
-write.table(result_table,file=file.path(save_path,output_file_name),sep=" ",col.names = F,row.names = F)
-write.table(mean_table,file=file.path(save_path,output_mean_name),sep=" ",col.names = F,row.names = F)
-
-
-# n <- 1000
-# B <- 1000
-# x <- rnorm(n*B,0,10) %>% matrix(nrow=B,ncol=n)
-# sd <- apply(x,1,mean) %>% sd()
-# 
-# y <- matrix(NA,nrow=B,ncol=n)
-# x1 <- rnorm(n,0,10)
-# for(i in 1:B){
-#   id <- sample(1:n,n,replace=T)
-#   y[i,] <- x1[id]
-# }
-# sd_y <- apply(y,1,mean) %>% sd()
-# 
-# sd
-# sd_y
-
-
-
-# 
-# beta <- c()
-# for(i in 1:1000){
-#   dt <- tibble(x1 = rnorm(1000,10,1),
-#                    y1 = 2 * x1 + rnorm(1000,0,2))
-#   model <- lm(y1~x1,dt)
-#   beta <- c(beta,model$coefficients[2])
-# }
-# sd(beta)
-# mean(beta)
-# 
-# beta2 <- c()
-# dt <- tibble(x1 = rnorm(1000,10,1),
-#              y1 = 2 * x1 + rnorm(1000,0,2))
-# for(i in 1:1000){
-#   sample_id <- sample(1:1000,1000,replace=T)
-#   dt2 <- dt[sample_id,]
-#   model2 <- lm(y1~x1,dt2)
-#   beta2 <- c(beta2,model2$coefficients[2])
-# }
-# sd(beta2)
-# mean(beta2)
+result <- result_table %>% as.tibble
+typeIerror_table <- merged_result_table %>% 
+  group_by(V1) %>% 
+  summarize(A = 1 - mean(V2,na.rm=T),
+            B = 1 - mean(V3,na.rm=T),
+            C = 1 - mean(V4,na.rm=T),
+            D = 1 - mean(V5,na.rm=T))
 
