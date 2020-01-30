@@ -1,7 +1,7 @@
 ########################################################## 
 # Multiple comparison with the best 
 # Modified from : Ertefaie et al (2015)
-# Last modified: April 13, 2017
+# Last modified: January 29, 2020
 ########################################################## 
 rm(list = ls())
 library(tidyverse)
