@@ -1,6 +1,6 @@
 # code_Joint_model_SMART
 
-This repo consists of the R codes to simulate SMART data with survival outcomes, fit the joint model described in "Joint Modeling and Multiple Comparisons with the Best of data from a SMART with Survival Outcomes". The code was written by Yan-Cheng Chao and Qui Tran.  Both authors contribute equally to the R code.
+This repo consists of the R codes to simulate SMART data with survival outcomes, fit the joint model described in "Joint Modeling and Multiple Comparisons with the Best of data from a SMART with Survival Outcomes". The code was written by Yan-Cheng Chao and Qui Tran. Both authors contributed equally to the R code.
 
 In particular:
 - simSMART.R: Function simSMART() to simulate 2 stage SMART design II with time-to-response and overall survival outcomes from 4 regimens.
