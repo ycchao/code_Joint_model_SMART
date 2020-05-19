@@ -21,6 +21,7 @@ source('helper.R') # Misc. helper functions
 source('simSMART.R') # simulate SMART with survival outcomes
 source('calH.R') # Estimate 2 non-parametric baseline hazards for response and death
 source('loglik.R') # Estimate log-likelihood
+source('simSMART_two_censoring.R') # simulate SMART with dependent censoring mechanisms
 
 ########################################################## Set parameters ####
 seed=1234; n=200; tolerance=1e-5; maxit=50; pi.x <- 0.5; pi.z1.R <- .5; pi.z1.NR <- .5; pi.z2.R=.5; pi.z2.NR <- .5
@@ -31,17 +32,24 @@ np.t=length(thetaZ); np.g=length(gammaZ); np.e=length(etaZ); np.m=length(muZ); n
 TimeRDu = round(seq(0, adt[2], by=10^(-decimal)),decimal)
 n_iter = 2 # number of iterations, set to 1000 in the manuscript
 resp_cen_prob=0.15
+base_r = 0.07
+extra_r = 0.03
 
 result_table <- matrix(NA,nrow=length(tbetas),ncol=3*n_iter)
 for (iter in 1:n_iter){
   ########################################################## Simulate data ####
   #### Generation of SMART with independent censoring
-  simudata <- simSMART(n, tbetas, pi.x, pi.z1.R, pi.z1.NR, pi.z2.R, pi.z2.NR, 
-                       Tcheck, bshape1, bscale1, bshape2, bscale2, adt, decimal)
-  #### Generation of SMART with dependent censoring
-  # simudata <- simSMART_two_censoring(n, tbetas, pi.x, pi.z1.R, pi.z1.NR, pi.z2.R, pi.z2.NR,
+  # simudata <- simSMART(n, tbetas, pi.x, pi.z1.R, pi.z1.NR, pi.z2.R, pi.z2.NR, 
+  #                      Tcheck, bshape1, bscale1, bshape2, bscale2, adt, decimal)
+  #### Generation of SMART with response-dependent censoring
+  # simudata <- simSMART_resp_dependent_censoring(n, tbetas, pi.x, pi.z1.R, pi.z1.NR, pi.z2.R, pi.z2.NR,
   #                                    Tcheck, bshape1, bscale1, bshape2, bscale2, adt, resp_cen_prob, 
   #                                    decimal)
+  #### Generation of SMART with covariate-dependent censoring
+  simudata <- simSMART_covariate_dependent_censoring(n, tbetas, pi.x, pi.z1.R, pi.z1.NR, pi.z2.R, pi.z2.NR,
+                                     Tcheck, bshape1, bscale1, bshape2, bscale2, base_r, extra_r, adt,
+                                     decimal)
+  
   Tind <- order(simudata$T1,simudata$T2)
   sorted <- simudata[Tind,]
   TimeRDu = sort(unique(c(simudata$T1,simudata$T2)))
@@ -90,7 +98,7 @@ for (iter in 1:n_iter){
   cat(iter)
 }
 
-result <- result_table %>% as.tibble
+result <- result_table %>% as_tibble
 beta_estimate <- result %>% select(num_range("V",seq(1,ncol(.),3))) %>% apply(.,1,mean)
 sd_beta <- result %>% select(num_range("V",seq(1,ncol(.),3))) %>% apply(.,1,sd)
 mean_se <- result %>% select(num_range("V",seq(2,ncol(.),3))) %>% apply(.,1,mean)

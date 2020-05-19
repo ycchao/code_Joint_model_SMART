@@ -1,10 +1,10 @@
 # code_Joint_model_SMART
 
-This repo consists of the R codes to simulate SMART data with survival outcomes, fit the joint model described in "Joint Modeling and Multiple Comparisons with the Best of data from a SMART with Survival Outcomes". The code was written by Yan-Cheng Chao and Qui Tran. Both authors contributed equally to the R code.
+This repo consists of the R codes to simulate SMART data with survival outcomes, fit the joint model described in "Joint Modeling and Multiple Comparisons with the Best of data from a SMART with Survival Outcomes". The codes were written by Yan-Cheng Chao and Qui Tran. Both authors contributed equally to the R codes.
 
 In particular:
-- simSMART.R: Function simSMART() to simulate 2 stage SMART design II with time-to-response and overall survival outcomes from 4 regimens.
-- simSMART_two_censoring.R: Function simSMART_two_censoring() to simulate 2 stage SMART design II with time-to-response and overall survival outcomes from 4 regimens and incorporates dependent censoring.
+- simSMART.R: Function simSMART() simulates 2 stage SMART design II with time-to-response and overall survival outcomes from 4 regimens.
+- simSMART_two_censoring.R: Functions simSMART_resp_dependent_censoring() and simSMART_covariate_dependent_censoring() simulate 2 stage SMART design II with time-to-response and overall survival outcomes from 4 regimens and incorporate response-dependent censoring and covariate-dependent censoring, respectively.
 - calH.R: Function calH() to estimate the 2 baseline hazards (time-to-response and time-to-death) non-parametrically. 
 - loglik.R: Function loglik() to calculate the log-likelihood for any set of beta coefficients.
 - simulation_tab1.R: This contains the code to estimate the beta coefficients of the joint model.
