@@ -1,8 +1,12 @@
 library(gdata)
-data_surv <- read.xls(file.path(yourpath,"calgbdata.xls"))
+library(DTR)
+library(tidyverse)
+
 source('helper.R') # Misc. helper functions
 source('calH.R') # Estimate 2 non-parametric baseline hazards for response and death
 source('loglik.R') # Estimate log-likelihood
+
+data_surv <- read.xls(file.path(yourpath,"calgbdata.xls"))
 
 Tcheck <- 160      # If not respond until Tcheck, the patient is considered to be a non-responder.
 sex <- data_surv$sex - 1 # 0=M,1=F
@@ -95,7 +99,7 @@ fit.V1A2B2=sapply(TimeRDu,FUN=s.km2.pred, theta=exp(Zt.V+Zt.X), gamma=exp(Zg.V+Z
 savefit = cbind(TimeRDu, fit.V0A1B1, fit.V0A1B2, fit.V0A2B1, fit.V0A2B2,fit.V1A1B1, fit.V1A1B2, fit.V1A2B1, fit.V1A2B2)
 
 ## Survival estimator (Guo&Tsiatis) from package 'DTR':
-library(DTR)
+
 calgb_dat$TR = 0; calgb_dat$TR[calgb_dat$R==1]=calgb_dat$T1[calgb_dat$R==1]
 calgb_dat$Z=calgb_dat$Zr; calgb_dat$Z[is.na(calgb_dat$Z)]=0
 calgb_dat$U=calgb_dat$T2
